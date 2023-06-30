@@ -24,7 +24,7 @@ def get_frame():
 
 @app.route("/")
 def index():
-    return render_template("_index.html")
+    return render_template("websocket_stream.html")
 
 
 @socketio.on("connect")
@@ -32,8 +32,8 @@ def connect():
     global camera
     if not camera:
         camera = cv2.VideoCapture(-1)
+        socketio.start_background_task(get_frame)
     socketio.emit("to_client", {"from": "server"})
-    socketio.start_background_task(get_frame)
 
 
 if __name__ == "__main__":
