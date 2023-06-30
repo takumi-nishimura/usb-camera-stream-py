@@ -1,19 +1,16 @@
 import base64
-import threading
 
 import cv2
-from flask import Flask, render_template, request
-from flask_cors import CORS
-from flask_socketio import SocketIO, emit
+from flask import Flask, render_template
+from flask_socketio import SocketIO
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "secret!"
 socketio = SocketIO(app, cors_allowed_origins="*")
+camera = None
 
-camera = cv2.VideoCapture(0)
 
-
-def cap_cam():
+def get_frame():
     while True:
         socketio.sleep(0.01)
         success, frame = camera.read()
@@ -32,8 +29,11 @@ def index():
 
 @socketio.on("connect")
 def connect():
+    global camera
+    if not camera:
+        camera = cv2.VideoCapture(-1)
     socketio.emit("to_client", {"from": "server"})
-    socketio.start_background_task(cap_cam)
+    socketio.start_background_task(get_frame)
 
 
 if __name__ == "__main__":
